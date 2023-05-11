@@ -4,7 +4,6 @@ def simulate(num_floors, start_floor, floor_map, total_passengers, start_up=True
     current_floor = start_floor                         # Current floor of elevator
     highest_pickup_floor = max(floor_map.keys())        # Highest floor a passenger is on
     lowest_pickup_floor = min(floor_map.keys())         # Lowest floor a passenger is on
-    dropoff_floors = []                                 # Stores floors with dropoffs
     time = 0                                            # Start time of simulation
     total_time = 0                                      # Sum of times spent in elevator by each person
     passengers_left = total_passengers                  # Number of passengers remaining
@@ -13,11 +12,11 @@ def simulate(num_floors, start_floor, floor_map, total_passengers, start_up=True
         print(f"Current time: {time}")
         # Drop off any passengers on floor
         if current_floor in elevator_passengers:
-            dropoff_floors.remove(current_floor)
             while elevator_passengers[current_floor]:
                 print(f"Dropping off passenger {elevator_passengers[current_floor].pop()}")
                 total_time += time
                 passengers_left -= 1
+            elevator_passengers.pop(current_floor)
 
         # Pick up any passengers from floor that are going in same direction as elevator
         i = 0
@@ -28,8 +27,6 @@ def simulate(num_floors, start_floor, floor_map, total_passengers, start_up=True
                     (not up and floor_map[current_floor][i][1] < current_floor):
                     passenger, dest = floor_map[current_floor].pop(i)
                     print(f"Loading passenger {passenger}")
-                    if dest not in dropoff_floors:
-                        dropoff_floors.append(dest)
                     if dest in elevator_passengers:
                         elevator_passengers[dest].append(passenger)
                     else:
@@ -41,16 +38,13 @@ def simulate(num_floors, start_floor, floor_map, total_passengers, start_up=True
                 floor_map.pop(current_floor)
         
         # Change elevator direction if needed, and pick up all passengers if direction is changed
-        dropoff_floors.sort()
-        if (up and (current_floor == num_floors or (current_floor >= highest_pickup_floor and len(dropoff_floors) != 0 and current_floor >= dropoff_floors[-1]))) or \
-            (not up and (current_floor == 1 or (current_floor <= lowest_pickup_floor and len(dropoff_floors) != 0 and current_floor <= dropoff_floors[0]))):
+        if (up and (current_floor == num_floors or (current_floor >= highest_pickup_floor and len(elevator_passengers.keys()) != 0 and current_floor >= max(elevator_passengers.keys())))) or \
+            (not up and (current_floor == 1 or (current_floor <= lowest_pickup_floor and len(elevator_passengers.keys()) != 0 and current_floor <= min(elevator_passengers.keys())))):
             up = not up
             if current_floor in floor_map:
                 for i in range(len(floor_map[current_floor])):
                     passenger, dest = floor_map[current_floor].pop(0)
                     print(f"Loading passenger {passenger}")
-                    if dest not in dropoff_floors:
-                        dropoff_floors.append(dest)
                     if dest in elevator_passengers:
                         elevator_passengers[dest].append(passenger)
                     else:
